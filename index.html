@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Lab Floor Plan - Note</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #f0f0f0; }
+        #info { position: absolute; top: 10px; width: 100%; text-align: center; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="info">แผนผัง 3D อาคารมารวชิต ชั้น 3 (Lab Floor Plan)</div>
+    
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Setup Scene ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xe0e0e0);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(20, 20, 20);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(10, 20, 10);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // --- ฟังก์ชันสร้างห้อง ---
+        function createRoom(name, x, z, w, d, color = 0x3498db) {
+            const geometry = new THREE.BoxGeometry(w, 2, d); // สูง 2 หน่วยเท่ากันทุกห้อง
+            const material = new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.8 });
+            const room = new THREE.Mesh(geometry, material);
+            room.position.set(x, 1, z);
+            scene.add(room);
+
+            // เพิ่มขอบสีดำให้เห็นชัด
+            const edges = new THREE.EdgesGeometry(geometry);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+            line.position.copy(room.position);
+            scene.add(line);
+        }
+
+        // --- ตัวอย่างการลงตำแหน่งตามรูป (ต้องปรับค่า x, z, w, d ตามจริง) ---
+        // แกน X = แนวนอน, แกน Z = แนวตั้งในรูป
+        createRoom("Hematology Lab", -5, -5, 6, 4, 0xffcccc); 
+        createRoom("Blood Bank Lab", 2, -5, 4, 4, 0xff5555);
+        createRoom("Clin. Microbiology", 8, 2, 5, 6, 0xccffcc);
+        createRoom("Clin. Chemistry", 8, -5, 5, 8, 0xccccff);
+        
+        // พื้นชั้น 3
+        const floorGeo = new THREE.PlaneGeometry(30, 30);
+        const floorMat = new THREE.MeshPhongMaterial({ color: 0x999999, side: THREE.DoubleSide });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = Math.PI / 2;
+        scene.add(floor);
+
+        // --- Render Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
